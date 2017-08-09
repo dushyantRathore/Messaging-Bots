@@ -17,7 +17,6 @@ details = {}
 def get_location_details(lat,lon):
 
     header = {"user-key": "e5643d5519ea87a914cf5d44e806fa61"}
-    Zomato_API_KEY = "e5643d5519ea87a914cf5d44e806fa61"
     Zomato_request_url = "https://developers.zomato.com/api/v2.1/geocode?lat=" + lat + "&lon=" + lon
     r = requests.post(Zomato_request_url, headers=header)
     res = json.loads(r.text)
