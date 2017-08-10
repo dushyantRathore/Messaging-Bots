@@ -1,13 +1,10 @@
 import telepot
-from telepot.loop import MessageLoop
-import time
-import urllib
-from pprint import pprint
-import string
-import requests
 import json
 from bs4 import BeautifulSoup
-import codecs
+import time
+import urllib
+import os
+import urllib3
 import youtube_dl
 
 TOKEN = '275551109:AAEC8iXZaCRKN2Kk_v6uYfa55QBQu5Hete0'
@@ -43,7 +40,7 @@ def get_lyrics(song,artist):
 
 def download_song(song, artist):
 
-    base_url = 'http://www.youtubeinmp3.com/fetch/?format=JSON&video='
+    base_url = 'http://www.youtubeinmp3.com/fetch/?format=JSON&video='  # Youtube MP3 url
 
     x = song + "by" + artist
 
@@ -84,54 +81,92 @@ def download_song(song, artist):
 
     l = l.replace('"', '')
 
-    #print(l)
+    # print(l)
+
     youtube_url = "https://www.youtube.com" + l
-    #print(youtube_url)
+    print("Youtube URL : " + str(youtube_url))
+
     download_url = base_url + str(youtube_url)
-    print(download_url)
+    # print(download_url)
 
-    # r = urllib.request.urlopen(download_url).read().decode('utf8')
-    # data = json.loads(r)
-    #
-    # path = "/home/dushyant/Desktop/Github/Telegram-Bots/file.mp3"
-    #
-    # usock = urllib.request.urlopen(download_url)
-    # print('info: ', usock.info())
-    # f = open(path, 'wb')
-    # try:
-    #     file_size = int(usock.info().getheaders("Content-Length")[0])
-    #     print('Downloading : %s Bytes: %s' % (path, file_size))
-    # except IndexError:
-    #     print('Unknown file size: index error')
-    #
-    # downloaded = 0
-    # block_size = 8192
-    # while True:
-    #     buff = usock.read(block_size)
-    #     if not buff:
-    #         break
-    #
-    #     downloaded = downloaded + len(buff)
-    #     f.write(buff)
-    #     # download_status = r"%3.2f%%" % (downloaded * 100.00 / file_size)
-    #     # download_status = download_status + (len(download_status)+1) * chr(8)
-    #     # print download_status,"done"
-    #
-    # f.close()
+    r = urllib.request.urlopen(download_url).read().decode('utf8')
+    data = json.loads(r)
 
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-    }
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([youtube_url])
+    title = data['title']
+    length = data['length']
+
+    file_name = str(title) + ".mp3" # File name for the downloaded file
+
+    if not os.path.exists(file_name):
+
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'outtmpl': file_name
+        }
+
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([youtube_url])
+
+    else:
+        print("File already exists")
+
+    return file_name,length
+
+
+def billboard_trending():
+
+    url = "http://www.billboard.com/charts/hot-100"
+    songs_file = urllib.request.urlopen(url)
+    songs_html = songs_file.read()
+    songs_file.close()
+
+    soup = BeautifulSoup(songs_html, 'html.parser')
+
+    title = soup.find_all('div', attrs={'class': 'chart-row__title'})
+
+    song = []
+    artist = []
+
+    for i in title:
+        head = i.find("h2")
+        song.append(head.text)
+
+    for a in soup.find_all("a", attrs={'class': 'chart-row__artist'}):
+        artist.append(a.text)
+
+    return song,artist
+
+
+def bollywood_trending():
+
+    url = "https://www.saavn.com/s/featured/hindi/Weekly_Top_Songs"
+    songs_file = urllib.request.urlopen(url)
+    songs_html =songs_file.read()
+    songs_file.close()
+
+    soup = BeautifulSoup(songs_html,  "html.parser")
+
+    song = []
+    album = []
+
+    for p in soup.find_all("p", attrs={"class": "song-name ellip"}):
+        song.append(p.text)
+
+    song = list(map(lambda s : s.strip(), song))
+
+    for i in range(0, len(song)):
+        song[i] = song[i].replace("\n", " - ")
+
+    return song
 
 
 def handle(msg):
+
     content_type, chat_type, chat_id = telepot.glance(msg)
     print(content_type, chat_type, chat_id)
 
@@ -139,31 +174,61 @@ def handle(msg):
         message = msg["text"].lower()
 
         if message == '/start':
+
             bot.sendMessage(chat_id, "Please choose one of the following options : "
                                      "\n1. Get the lyrics of a song"
-                                     "\n2. Download a song")
+                                     "\n2. Download a song"
+                                     "\n3. Get the top tracks on billboard"
+                                     "\n4. Get the trending bollywood tracks")
 
         elif message in ['hi', 'heyy', 'heya', 'hey', 'hello']:
+
             bot.sendMessage(chat_id, "Hi, please enter /start to use the features of the bot")
 
         elif message in ['1', '1.', '1)', '(1)']:
+
             bot.sendMessage(chat_id, "To get the lyrics of a song, provide the details in the following format : "
                                      "\n\nlyrics song 'Name of the song' by 'Name of the artist'")
 
         elif message in ['2', '2.', '2)', '(2)']:
+
             bot.sendMessage(chat_id, "To download a song, provide the details in the following format : "
                                      "\n\ndownload song 'Name of the song' by 'Name of the artist'")
 
+        elif message in ['3', '3.', '3)', '(3)']:
+
+            bot.sendMessage(chat_id, "Getting the top tracks on billboard for you.")
+
+            song,artist = billboard_trending()
+
+            result = ""
+
+            for i in range(0,10):
+                result += "\n" + str(i+1) + ". " + str(song[i]) + "  -  " + str(artist[i])
+
+            bot.sendMessage(chat_id, result)
+
+        elif message in ['4', '4.', '4)', '(4)']:
+
+            bot.sendMessage(chat_id, "Getting the trending bollywood tracks for you.")
+
+            s = bollywood_trending()
+
+            result = ""
+
+            for i in range(0,10):
+                result += "\n" + str(i+1) + ". " + str(s[i])
+
+            bot.sendMessage(chat_id, result)
+
         elif 'lyrics' in message:
+
             message = message.split()
             song_name_index = message.index("song")
             artist_name_index = message.index("by")
 
             song_name = "".join(message[song_name_index+1:artist_name_index])
             artist_name = "".join(message[artist_name_index+1:])
-
-            #print(song_name)
-            #print(artist_name)
 
             l = get_lyrics(song_name,artist_name)
             l = list(l)
@@ -175,6 +240,7 @@ def handle(msg):
             bot.sendMessage(chat_id, secondpart)
 
         elif 'download' in message:
+
             message = message.split()
             song_name_index = message.index("song")
             artist_name_index = message.index("by")
@@ -182,7 +248,18 @@ def handle(msg):
             song_name = "".join(message[song_name_index + 1:artist_name_index])
             artist_name = "".join(message[artist_name_index + 1:])
 
-            download_song(song_name, artist_name)
+            bot.sendMessage(chat_id, "Relax, I'm getting your song..")
+
+            file,length = download_song(song_name, artist_name)
+
+            audio = open(file, 'rb')
+            bot.sendAudio(chat_id, audio)
+
+proxy_url = "http://proxy.server:3128"
+telepot.api._pools = {
+    'default': urllib3.ProxyManager(proxy_url=proxy_url, num_pools=3, maxsize=10, retries=False, timeout=30),
+}
+telepot.api._onetime_pool_spec = (urllib3.ProxyManager, dict(proxy_url=proxy_url, num_pools=1, maxsize=1, retries=False, timeout=30))
 
 
 bot = telepot.Bot(TOKEN)

@@ -20,6 +20,7 @@ def get_location_details(lat,lon):
     Zomato_request_url = "https://developers.zomato.com/api/v2.1/geocode?lat=" + lat + "&lon=" + lon
     r = requests.post(Zomato_request_url, headers=header)
     res = json.loads(r.text)
+    r.close()
 
     global details
     details = res
