@@ -1,1 +1,1 @@
-web: python Restobot_main.py
+worker: python Restobot_main.py
