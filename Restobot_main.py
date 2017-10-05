@@ -1,9 +1,5 @@
 import telepot
-from telepot.loop import MessageLoop
 import time
-import urllib3
-from pprint import pprint
-import string
 import requests
 import json
 
