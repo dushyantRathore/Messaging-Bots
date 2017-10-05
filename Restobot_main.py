@@ -1,13 +1,17 @@
 import telepot
-import time
 import requests
 import json
+import os
+from flask import Flask,jsonify,render_template
 
 bot = telepot.Bot('386925653:AAE52ubyjvCWrxXQgySBmiowG8G8xyMm7g4')
 
 # print(bot.getMe())
 
 details = {}
+
+
+app = Flask(__name__)
 
 
 def get_location_details(lat,lon):
@@ -24,6 +28,7 @@ def get_location_details(lat,lon):
     return res
 
 
+@app.route("/")
 def handle(msg):        # Glance a message
     content_type, chat_type, chat_id = telepot.glance(msg)
     print(content_type, chat_type, chat_id)
@@ -82,8 +87,16 @@ def handle(msg):        # Glance a message
                         "\n2. Explore top cuisines"
                         "\n3. Explore nearby restaurants")
 
+        return "ok"
+
+
 bot.message_loop(handle)
 
-# Keep the program running.
-while 1:
-    time.sleep(10)
+# # Keep the program running.
+# while 1:
+#     time.sleep(10)
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
