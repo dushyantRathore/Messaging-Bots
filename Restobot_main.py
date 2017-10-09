@@ -1,7 +1,7 @@
 import telepot
 import requests
 import json
-import os
+from os import *
 from flask import Flask,jsonify,render_template
 
 bot = telepot.Bot('386925653:AAE52ubyjvCWrxXQgySBmiowG8G8xyMm7g4')
@@ -98,5 +98,5 @@ bot.message_loop(handle)
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = app.run(environ.get('PORT'))
     app.run(host='0.0.0.0', port=port)
