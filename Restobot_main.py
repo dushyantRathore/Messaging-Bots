@@ -1,7 +1,7 @@
 import telepot
 import requests
 import json
-from os import *
+import os
 from flask import Flask,jsonify,render_template
 
 bot = telepot.Bot('386925653:AAE52ubyjvCWrxXQgySBmiowG8G8xyMm7g4')

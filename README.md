@@ -1,1 +1,1 @@
-# Some random Telegram bots.
+# A sample Telegram bot made using the Zomato API.
