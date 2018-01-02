@@ -1,8 +1,59 @@
 from bs4 import BeautifulSoup
 import requests
 import json
+import cryptocompare
+from flask import jsonify
 
 MAX_LIMIT = 10
+
+
+# Get the price of the currency
+
+def get_current_price(coin):
+	price = cryptocompare.get_price(coin, curr='USD')
+	return price
+
+
+# Get the top 10 cryptocurrencies
+
+def get_top_10_currencies():
+	url = "https://coinmarketcap.com/"
+	headers = {'User-Agent': 'Mozilla/5.0'}
+	response = requests.get(url, headers)
+	soup = BeautifulSoup(response.text, "html.parser")
+
+	top_10_currencies = []
+
+	for a in soup.find_all("a", attrs={"class" : "currency-name-container"}):
+		top_10_currencies.append(a.text)
+
+	top_10_currencies = top_10_currencies[0:10]
+	print(top_10_currencies)
+
+	return top_10_currencies
+
+
+# Get the top 10 cryptocurrency exchanges
+
+def get_top_10_exchanges():
+	url = "https://coinmarketcap.com/exchanges/volume/24-hour/"
+	headers = {'User-Agent': 'Mozilla/5.0'}
+	response = requests.get(url, headers)
+	soup = BeautifulSoup(response.text, "html.parser")
+
+	top_10_exchanges = []
+
+	for h3 in soup.find_all("h3",attrs={"class" : "volume-header"}):
+		for a in h3.find_all("a"):
+			top_10_exchanges.append(a.text)
+
+	top_10_exchanges = top_10_exchanges[0:10]
+	print(top_10_exchanges)
+
+	return top_10_exchanges
+
+
+# Get the latest cryptocurrency news
 
 def get_latest_crypto_news():
 	url = "https://cryptoanswers.net/"
@@ -19,7 +70,7 @@ def get_latest_crypto_news():
 	for news in crypto_news:
 		article = {"headlines": news.text, "link": news.a['href']}
 		trending_news.append(article)
-	print trending_news
+	print(trending_news)
 	return trending_news
 
 
@@ -69,77 +120,71 @@ def get_prices(currency, comparison):
 	prices["1m"] = get1mprice(code, comparison)
 	prices["1y"] = get1yprice(code, comparison)
 		
-	print prices
+	print(prices)
 
 	return prices
 
 
-def get_top_10_cryptocurrencies():
-	url = "https://coinranking.com/"
-	headers = {'User-Agent': 'Mozilla/5.0'}
-	response = requests.get(url, headers)
-
-	soup = BeautifulSoup(response.text, 'html.parser')
-
-	currencies = soup.find_all('a', attrs={'class':'coin-list__body__row'})
-	
-	count = 0
-	top_10_currencies = []
-
-	for currency in currencies:
-
-		currency_name = currency.find('span', attrs={'class':'coin-name'}).text
-		top_10_currencies.append(currency_name)
-
-		count = count + 1
-
-		if count == MAX_LIMIT:
-			break;
-
-	print top_10_currencies
-
-	return top_10_currencies
-
-
-def get_top_10_exchanges():
-	url = "https://coinmarketcap.com/exchanges/volume/24-hour/all/"
-	headers = {'User-Agent': 'Mozilla/5.0'}
-	response = requests.get(url, headers)
-
-	soup = BeautifulSoup(response.text, 'html.parser')
-
-	exchanges = soup.find_all('td', attrs={'class':'volume-header-container'})
-
-	top_10_exchanges = []
-
-	count = 0
-
-	for exchange in exchanges:
-		exchange_detail = {}
-		exchange_detail['name'] = exchange.find('a').text
-
-		url = "https://coinmarketcap.com/exchanges/"+exchange_detail['name']
-		headers = {'User-Agent': 'Mozilla/5.0'}
-		response = requests.get(url, headers)
-
-		soup = BeautifulSoup(response.text, 'html.parser')
-
-		exchange_detail['link'] = soup.find('ul', attrs={'class':'list-unstyled'}).find('a').href
-
-		top_10_exchanges.append(exchange_detail)
-
-		count = count + 1
-
-		if count == MAX_LIMIT:
-			break
-
-	print top_10_exchanges
-
-	return top_10_exchanges
+# def get_top_10_cryptocurrencies():
+# 	url = "https://coinranking.com/"
+# 	headers = {'User-Agent': 'Mozilla/5.0'}
+# 	response = requests.get(url, headers)
+#
+# 	soup = BeautifulSoup(response.text, 'html.parser')
+#
+# 	currencies = soup.find_all('a', attrs={'class':'coin-list__body__row'})
+#
+# 	count = 0
+# 	top_10_currencies = []
+#
+# 	for currency in currencies:
+#
+# 		currency_name = currency.find('span', attrs={'class':'coin-name'}).text
+# 		top_10_currencies.append(currency_name)
+#
+# 		count = count + 1
+#
+# 		if count == MAX_LIMIT:
+# 			break;
+#
+# 	print(top_10_currencies)
+#
+# 	return top_10_currencies
 
 
-if __name__ == "__main__":
-	# print get_latest_crypto_news()
-	# get_prices("ETH", "INR")
-	get_top_10_cryptocurrencies()
-	# get_top_10_exchanges()
+# def get_top_10_exchanges():
+# 	url = "https://coinmarketcap.com/exchanges/volume/24-hour/all/"
+# 	headers = {'User-Agent': 'Mozilla/5.0'}
+# 	response = requests.get(url, headers)
+#
+# 	soup = BeautifulSoup(response.text, 'html.parser')
+#
+# 	exchanges = soup.find_all('td', attrs={'class':'volume-header-container'})
+#
+# 	top_10_exchanges = []
+#
+# 	count = 0
+#
+# 	for exchange in exchanges:
+# 		exchange_detail = {}
+# 		exchange_detail['name'] = exchange.find('a').text
+#
+# 		url = "https://coinmarketcap.com/exchanges/"+exchange_detail['name']
+# 		headers = {'User-Agent': 'Mozilla/5.0'}
+# 		response = requests.get(url, headers)
+#
+# 		soup = BeautifulSoup(response.text, 'html.parser')
+#
+# 		exchange_detail['link'] = soup.find('ul', attrs={'class':'list-unstyled'}).find('a').href
+#
+# 		top_10_exchanges.append(exchange_detail)
+#
+# 		count = count + 1
+#
+# 		if count == MAX_LIMIT:
+#
+# 			break
+#
+# 	print(top_10_exchanges)
+
+#	return top_10_exchanges
