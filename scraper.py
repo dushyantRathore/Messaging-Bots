@@ -81,7 +81,7 @@ def get24hprice(code, comparison):
 
 	content = response.content.decode('utf-8')
 	content = json.loads(content)
-	return content['data']['history'][0]['price'], content['data']['history'][-1]['price']
+	return float(content['data']['history'][0]['price']), float(content['data']['history'][-1]['price'])
 
 
 def get1mprice(code, comparison):
@@ -91,7 +91,7 @@ def get1mprice(code, comparison):
 
 	content = response.content.decode('utf-8')
 	content = json.loads(content)
-	return content['data']['history'][0]['price']
+	return float(content['data']['history'][0]['price'])
 
 
 def get1yprice(code, comparison):
@@ -101,7 +101,7 @@ def get1yprice(code, comparison):
 
 	content = response.content.decode('utf-8')
 	content = json.loads(content)
-	return content['data']['history'][0]['price']
+	return float(content['data']['history'][0]['price'])
 
 
 def get_prices(currency, comparison):
@@ -116,13 +116,21 @@ def get_prices(currency, comparison):
 
 	prices = {}
 
-	prices["24h"], prices['current'] = get24hprice(code, comparison)
-	prices["1m"] = get1mprice(code, comparison)
-	prices["1y"] = get1yprice(code, comparison)
+	prices['24h'], prices['current'] = get24hprice(code, comparison)
+	prices['1m'] = get1mprice(code, comparison)
+	prices['1y'] = get1yprice(code, comparison)
 		
-	print(prices)
+	print(currency, prices)
 
-	return prices
+	prices_diff = {}
+
+	prices_diff['day'] = ((prices['current']-prices['24h'])/prices['24h'])*100
+	prices_diff['month'] = ((prices['current']-prices['1m'])/prices['1m'])*100
+	prices_diff['year'] = ((prices['current']-prices['1y'])/prices['1y'])*100
+
+	print(prices_diff)
+
+	return prices_diff
 
 
 # def get_top_10_cryptocurrencies():

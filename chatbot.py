@@ -7,6 +7,8 @@ import telepot
 import os
 
 greetings = ["hi","hello","hey", "heyy", "heya"]
+coins = ["BTC","ETH","XRP","LTC"]
+previous_message = ""
 
 bot = telepot.Bot('389435360:AAFYKaUvs7iMgWCTcwAWwznJG_URoyPABkc')
 print(bot.getMe())
@@ -14,11 +16,12 @@ print(bot.getMe())
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def handle(msg):        # Glance a message
     content_type, chat_type, chat_id = telepot.glance(msg)
     print(content_type, chat_type, chat_id)
+
+    global previous_message
 
     if content_type == "text":
         message = msg["text"].lower()
@@ -30,12 +33,15 @@ def handle(msg):        # Glance a message
         elif message in greetings:
             bot.sendMessage(chat_id, "Hi")
         elif "/checkprice" in message:
-            message  = message.split(" ")
-            coin = message[1].upper()
-            price = scraper.get_current_price(coin)
-            price = str(price[coin]["USD"])
-            response = "*Details*" + "\n" + "Currency : " + coin + "\n" + "Current price : " + "$ " + price
-            bot.sendMessage(chat_id, response, parse_mode='Markdown')
+            previous_message = "/checkprice"
+            # message  = message.split(" ")
+            # coin = message[1].upper()
+            # price = scraper.get_current_price(coin)
+            # price = str(price[coin]["USD"])
+            response_keyboard = build_keyboard()
+            response = "Choose one"
+            # response = "*Details*" + "\n" + "Currency : " + coin + "\n" + "Current price : " + "$ " + price
+            bot.sendMessage(chat_id, response, parse_mode='Markdown', reply_markup=response_keyboard)
         elif message == "/topcryptos":
             top_10_currencies = scraper.get_top_10_currencies()
             response = "*Top 10 cryptocurrencies by market cap : *"
@@ -57,7 +63,41 @@ def handle(msg):        # Glance a message
                 headline = news["headlines"]
                 link = news["link"]
                 bot.sendMessage(chat_id, headline + "\n" + link)
+        elif message == "/mostprofitable":
+            most_profitable_by_year = {'coin':'', 'diff':-1}
+            most_profitable_by_month = {'coin':'', 'diff':-1}
+            most_profitable_by_day = {'coin':'', 'diff':-1}
 
+            # most_profitable_by_year['diff'] = -1, most_profitable_by_month['diff'] = -1, most_profitable_by_day['diff'] = -1
+
+            for i in range(len(coins)):
+                prices_diff = scraper.get_prices(coins[i], "USD")
+                if prices_diff['day'] > most_profitable_by_day['diff']:
+                    most_profitable_by_day['diff'] = prices_diff['day']
+                    most_profitable_by_day['coin'] = coins[i]
+
+                if prices_diff['month'] > most_profitable_by_month['diff']:
+                    most_profitable_by_month['diff'] = prices_diff['month']
+                    most_profitable_by_month['coin'] = coins[i]
+
+                if prices_diff['year'] > most_profitable_by_year['diff']:
+                    most_profitable_by_year['diff'] = prices_diff['year']
+                    most_profitable_by_year['coin'] = coins[i]
+
+            response = "*Most Profitable*"
+            response += "\n*By Day : *" + "*" + most_profitable_by_day['coin'] + "*" + "\n" + "Percentage : " + str(round(most_profitable_by_day['diff'],2)) + "%"
+            response += "\n*By Month : *" + "*" + most_profitable_by_month['coin'] + "*" + "\n" + "Percentage : " + str(round(most_profitable_by_month['diff'],2)) + "%"
+            response += "\n*By Year : *" + "*" + most_profitable_by_year['coin'] + "*" + "\n" + "Percentage : " + str(round(most_profitable_by_year['diff'],2)) + "%"
+            bot.sendMessage(chat_id, response, parse_mode='Markdown')
+        elif previous_message == "/checkprice":
+            # message  = message.split(" ")
+            # coin = message[1].upper()
+            coin = message.upper()
+            price = scraper.get_current_price(coin)
+            price = str(price[coin]["USD"])
+            response = "*Details*" + "\n" + "Currency : " + coin + "\n" + "Current price : " + "$ " + price
+            bot.sendMessage(chat_id, response, parse_mode='Markdown')
+            previous_message = ""
 
 
 bot.message_loop(handle)
@@ -65,6 +105,16 @@ bot.message_loop(handle)
 # # Keep the program running.
 # while 1:
 #     time.sleep(10)
+
+def build_keyboard():
+
+    keyboard = [[]]
+
+    for i in range(len(coins)):
+        keyboard[0].append(coins[i])
+
+    reply_markup = {"keyboard":keyboard, "one_time_keyboard": True}
+    return json.dumps(reply_markup)
 
 
 if __name__ == "__main__":
