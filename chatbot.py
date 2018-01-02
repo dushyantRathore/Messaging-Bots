@@ -1,93 +1,72 @@
 import json
 import requests
-import urllib2
+import urllib3
 import scraper
+from flask import Flask, render_template
+import telepot
+import os
 
-TOKEN = "389435360:AAFYKaUvs7iMgWCTcwAWwznJG_URoyPABkc"
-URL = "http://api.telegram.org/bot{}".format(TOKEN)
-TIME_OUT = 100
+greetings = ["hi","hello","hey", "heyy", "heya"]
 
-greetings = ["hi","hello","hey"]
-coins = ["BTC","ETH","XRP","LTC"]
-
-def get_chats(last_update_id):
-
-    if last_update_id:
-        response = requests.get(URL+"/getUpdates?timeout={}&offset={}".format(TIME_OUT, last_update_id))
-    else:
-        response = requests.get(URL+"/getUpdates?timeout={}&offset={}".format(TIME_OUT, last_update_id))
-
-    content = response.content.decode("utf-8")
-    content = json.loads(content)
-
-    return content
+bot = telepot.Bot('389435360:AAFYKaUvs7iMgWCTcwAWwznJG_URoyPABkc')
+print(bot.getMe())
 
 
-def send_reply(chat_id, message):
-
-    message = message.lower()
-
-    reply_markup = None
-
-    if message in greetings:
-        reply = "Hey there !"
-    elif message == "check price":
-        reply_markup = build_keyboard()
-        # print reply_markup
-        reply = "Choose one"
-    elif message == "/topcryptos":
-        reply = scraper.get_top_10_cryptocurrencies()
-        print reply
-    else:
-        reply = "Hey, I am still learning, kindly bear with me !"
-
-    reply = urllib2.quote(reply)
-
-    if reply_markup:
-        requests.get(URL + "/sendMessage?chat_id={}&text={}&parse_mode=Markdown&reply_markup={}".format(chat_id, reply, reply_markup))
-    else:
-        requests.get(URL + "/sendMessage?chat_id={}&text={}".format(chat_id, reply))
+app = Flask(__name__)
 
 
-def get_last_update_id(updates):
+@app.route("/")
+def handle(msg):        # Glance a message
+    content_type, chat_type, chat_id = telepot.glance(msg)
+    print(content_type, chat_type, chat_id)
 
-    update_ids = []
+    if content_type == "text":
+        message = msg["text"].lower()
 
-    for update in updates:
-        update_ids.append(int(update["update_id"]))
+        # Main Structure
 
-    return max(update_ids)
+        if message == "/start":
+            bot.sendMessage(chat_id, "Welcome to Crypto Bot where you will get all the details about the cryptocurrency market.")
+        elif message in greetings:
+            bot.sendMessage(chat_id, "Hi")
+        elif "/checkprice" in message:
+            message  = message.split(" ")
+            coin = message[1].upper()
+            price = scraper.get_current_price(coin)
+            price = str(price[coin]["USD"])
+            response = "*Details*" + "\n" + "Currency : " + coin + "\n" + "Current price : " + "$ " + price
+            bot.sendMessage(chat_id, response, parse_mode='Markdown')
+        elif message == "/topcryptos":
+            top_10_currencies = scraper.get_top_10_currencies()
+            response = "*Top 10 cryptocurrencies by market cap : *"
+            for coin in top_10_currencies:
+                index = str(top_10_currencies.index(coin) + 1)
+                response = response + "\n" + index + ". " + coin
+            bot.sendMessage(chat_id, response, parse_mode='Markdown')
+        elif message == "/topexchanges":
+            top_10_exchanges = scraper.get_top_10_exchanges()
+            response = "*Top 10 cryptocurrency exchanges by volume : *"
+            for exchange in top_10_exchanges:
+                index = str(top_10_exchanges.index(exchange) + 1)
+                response = response + "\n" + index + ". " + exchange
+            bot.sendMessage(chat_id, response, parse_mode='Markdown')
+        elif message == "/latestnews":
+            latest_news = scraper.get_latest_crypto_news()
+            bot.sendMessage(chat_id, "*Latest Cryptocurrency news : *", parse_mode="Markdown")
+            for news in latest_news:
+                headline = news["headlines"]
+                link = news["link"]
+                bot.sendMessage(chat_id, headline + "\n" + link)
 
 
-def build_keyboard():
 
-    keyboard = [[]]
+bot.message_loop(handle)
 
-    for i in range(len(coins)):
-        keyboard[0].append(str(i+1))
-
-    reply_markup = {"keyboard":keyboard, "one_time_keyboard": True}
-    return json.dumps(reply_markup)
-
-
-def main():
-    last_update_id = None
-
-    while True:
-        updates = get_chats(last_update_id)
-
-        if len(updates["result"]) > 0:
-            last_update_id = get_last_update_id(updates["result"]) + 1
-
-            for update in updates["result"]:
-                try:
-                    message = update["message"]["text"]
-                    chat_id = update["message"]["chat"]["id"]
-                    send_reply(chat_id, message)
-                except Exception as e:
-                    print(e)
+# # Keep the program running.
+# while 1:
+#     time.sleep(10)
 
 
 if __name__ == "__main__":
-    main()
-    # print json.loads(get_chats(None))["result"]
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
