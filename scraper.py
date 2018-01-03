@@ -7,6 +7,28 @@ from flask import jsonify
 MAX_LIMIT = 10
 
 
+def get_codes_coins():
+	url = "https://cdn.api.coinranking.com/v1/public/coins"
+	headers = {'User-Agent': 'Mozilla/5.0'}
+	response = requests.get(url, headers)
+
+	content = response.content.decode('utf-8')
+	content = json.loads(content)
+
+	coins = content['data']['coins'][:5]
+
+	codes = {}
+
+	for coin in coins:
+		coin_name = coin['symbol']
+		codes[coin_name] = coin['id']
+
+	# print(codes)
+
+	return codes
+
+
+
 # Get the price of the currency
 
 def get_current_price(coin):
@@ -104,15 +126,15 @@ def get1yprice(code, comparison):
 	return float(content['data']['history'][0]['price'])
 
 
-def get_prices(currency, comparison):
-	if currency == "BTC":
-		code = 1335
-	elif currency == "XRP":
-		code = 840
-	elif currency == "ETH":
-		code = 1211
-	elif currency == "LTC":
-		code = 527
+def get_prices(code, comparison):
+	# if currency == "BTC":
+	# 	code = 1335
+	# elif currency == "XRP":
+	# 	code = 840
+	# elif currency == "ETH":
+	# 	code = 1211
+	# elif currency == "LTC":
+	# 	code = 527
 
 	prices = {}
 
@@ -120,18 +142,28 @@ def get_prices(currency, comparison):
 	prices['1m'] = get1mprice(code, comparison)
 	prices['1y'] = get1yprice(code, comparison)
 		
-	print(currency, prices)
+	# print(code, prices)
 
 	prices_diff = {}
 
-	prices_diff['day'] = ((prices['current']-prices['24h'])/prices['24h'])*100
-	prices_diff['month'] = ((prices['current']-prices['1m'])/prices['1m'])*100
-	prices_diff['year'] = ((prices['current']-prices['1y'])/prices['1y'])*100
+	if prices['24h'] == 0:
+		prices_diff['day'] = 0
+	else:
+		prices_diff['day'] = ((prices['current']-prices['24h'])/prices['24h'])*100
 
-	print(prices_diff)
+	if prices['1m'] == 0:
+		prices_diff['month'] = 0
+	else:
+		prices_diff['month'] = ((prices['current']-prices['1m'])/prices['1m'])*100
+
+	if prices['1y'] == 0:
+		prices_diff['year'] = 0
+	else:
+		prices_diff['year'] = ((prices['current']-prices['1y'])/prices['1y'])*100
+
+	# print(prices_diff)
 
 	return prices_diff
-
 
 # def get_top_10_cryptocurrencies():
 # 	url = "https://coinranking.com/"
