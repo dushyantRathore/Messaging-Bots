@@ -28,7 +28,7 @@ def handle(msg):        # Glance a message
             bot.sendMessage(chat_id, "Welcome to Crypto Bot where you will get all the details about the cryptocurrency market.")
         elif message in greetings:
             bot.sendMessage(chat_id, "Hi")
-        elif "/checkprice" in message:
+        elif "/price" in message:
             message  = message.split(" ")
             coin = message[1].upper()
             price = scraper.get_current_price(coin)
@@ -49,14 +49,14 @@ def handle(msg):        # Glance a message
                 index = str(top_10_exchanges.index(exchange) + 1)
                 response = response + "\n" + index + ". " + exchange
             bot.sendMessage(chat_id, response, parse_mode='Markdown')
-        elif message == "/latestnews":
+        elif message == "/news":
             latest_news = scraper.get_latest_crypto_news()
             bot.sendMessage(chat_id, "*Latest Cryptocurrency news : *", parse_mode="Markdown")
             for news in latest_news:
                 headline = news["headlines"]
                 link = news["link"]
                 bot.sendMessage(chat_id, headline + "\n" + link)
-        elif message == "/mostprofitable":
+        elif message == "/mostprof":
             most_profitable_by_year = {'coin':'', 'diff':-1}
             most_profitable_by_month = {'coin':'', 'diff':-1}
             most_profitable_by_day = {'coin':'', 'diff':-1}
@@ -93,15 +93,15 @@ bot.message_loop(handle)
 # while 1:
 #     time.sleep(10)
 
-def build_keyboard():
-
-    keyboard = [[]]
-
-    for i in range(len(coins)):
-        keyboard[0].append(coins[i])
-
-    reply_markup = {"keyboard":keyboard, "one_time_keyboard": True}
-    return json.dumps(reply_markup)
+# def build_keyboard():
+#
+#     keyboard = [[]]
+#
+#     for i in range(len(coins)):
+#         keyboard[0].append(coins[i])
+#
+#     reply_markup = {"keyboard":keyboard, "one_time_keyboard": True}
+#     return json.dumps(reply_markup)
 
 
 if __name__ == "__main__":
