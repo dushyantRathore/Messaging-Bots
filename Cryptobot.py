@@ -1,7 +1,7 @@
 import json
 import requests
 import urllib3
-import scraper
+import Cryptobot_scraper as scraper
 from flask import Flask, render_template
 import telepot
 import os
