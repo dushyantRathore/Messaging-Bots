@@ -1,5 +1,6 @@
 # Random Telegram ChatBots
 <br><br>
+
 **Restobot**
 <br>
 This bot makes use of Zomato's API to give details about 
@@ -15,6 +16,7 @@ Just share your location to get started. The link to the bot is
 &nbsp;
 <img src="https://user-images.githubusercontent.com/17358196/35372500-52f4bfac-01c0-11e8-97c4-0773da4c420e.png" width="200" height="300" />
 <br><br>
+
 **Crypto bot**
 <br>
 This bot gives important details like the top cryptocurrencies,
