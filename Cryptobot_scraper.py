@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import json
-import cryptocompare
-from flask import jsonify
+from cryptocompy import price
 
 MAX_LIMIT = 10
 
@@ -32,8 +31,8 @@ def get_codes_coins():
 # Get the price of the currency
 
 def get_current_price(coin):
-	price = cryptocompare.get_price(coin, curr='USD')
-	return price
+	p = price.get_current_price(coin, "USD")
+	return p[coin]["USD"]
 
 
 # Get the top 10 cryptocurrencies
