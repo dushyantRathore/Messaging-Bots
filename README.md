@@ -1,9 +1,9 @@
-# Random Telegram ChatBots
+# Random Bots on different platforms
 <br><br>
 
 **Restobot**
 <br>
-This bot makes use of Zomato's API to give details about 
+This telegram bot makes use of Zomato's API to give details about 
 the nightlife, top cuisines and best restaurants in your area.
 Just share your location to get started. The link to the bot is 
 [t.me/Restofinder_bot](t.me/Restofinder_bot).
@@ -19,7 +19,7 @@ Just share your location to get started. The link to the bot is
 
 **Crypto bot**
 <br>
-This bot gives important details like the top cryptocurrencies,
+This telegram bot gives important details like the top cryptocurrencies,
 prices, top news and exchanges etc. The username of the bot is 
 `@half_blood_prince_bot`.
 <br><br>
